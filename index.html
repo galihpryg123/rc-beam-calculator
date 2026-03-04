@@ -16,70 +16,29 @@
 <div class="container">
 
     <div class="card">
-        <h2>Input Parameter</h2>
+        <h2>Input Data</h2>
 
         <div class="grid">
-            <div>
-                <label>fc' (MPa)</label>
-                <input type="number" id="fc" value="25">
-            </div>
-
-            <div>
-                <label>fy (MPa)</label>
-                <input type="number" id="fy" value="420">
-            </div>
-
-            <div>
-                <label>Lebar b (mm)</label>
-                <input type="number" id="b" value="300">
-            </div>
-
-            <div>
-                <label>Tinggi h (mm)</label>
-                <input type="number" id="h" value="600">
-            </div>
-
-            <div>
-                <label>Selimut (mm)</label>
-                <input type="number" id="cover" value="40">
-            </div>
-
-            <div>
-                <label>Ø Tulangan Utama (mm)</label>
-                <input type="number" id="db" value="16">
-            </div>
-
-            <div>
-                <label>Ø Sengkang (mm)</label>
-                <input type="number" id="ds" value="10">
-            </div>
-
-            <div>
-                <label>Mu (kNm)</label>
-                <input type="number" id="Mu" value="200">
-            </div>
-
-            <div>
-                <label>Vu (kN)</label>
-                <input type="number" id="Vu" value="150">
-            </div>
+            <input type="number" id="fc" placeholder="fc' (MPa)" value="25">
+            <input type="number" id="fy" placeholder="fy (MPa)" value="420">
+            <input type="number" id="b" placeholder="Lebar b (mm)" value="300">
+            <input type="number" id="h" placeholder="Tinggi h (mm)" value="600">
+            <input type="number" id="cover" placeholder="Selimut (mm)" value="40">
+            <input type="number" id="db" placeholder="Ø Tulangan (mm)" value="16">
+            <input type="number" id="ds" placeholder="Ø Sengkang (mm)" value="10">
+            <input type="number" id="Mu" placeholder="Mu (kNm)" value="200">
+            <input type="number" id="Vu" placeholder="Vu (kN)" value="150">
         </div>
 
-        <button id="designBtn">DESIGN BEAM</button>
+        <button type="button" onclick="designBeam()">DESIGN BEAM</button>
     </div>
 
     <div class="card">
-        <h2>Hasil Desain</h2>
-        <div id="output" class="output-box">
-            Tekan tombol DESIGN untuk menghitung.
-        </div>
+        <h2>Hasil Perhitungan</h2>
+        <div id="output">Klik DESIGN BEAM untuk menghitung.</div>
     </div>
 
 </div>
-
-<footer>
-    © 2026 Galih Prayogo - Structural Engineering Tools
-</footer>
 
 <script src="script.js"></script>
 </body>
