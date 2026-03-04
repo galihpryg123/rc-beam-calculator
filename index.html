@@ -1,158 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>RC Beam Design - SNI 2847:2019</title>
-
-<style>
-body{font-family:Arial;background:#f4f6f9;padding:30px;}
-.container{max-width:900px;margin:auto;background:white;padding:25px;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,0.1);}
-h1{text-align:center;}
-.subtitle{text-align:center;color:gray;margin-bottom:20px;}
-input{width:100%;padding:6px;margin-bottom:10px;}
-button{width:100%;padding:12px;background:#1e40af;color:white;border:none;}
-.result{margin-top:20px;background:#eef2ff;padding:15px;border-radius:8px;}
-.section{margin-top:15px;padding:10px;background:white;border-left:6px solid #1e40af;}
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RC Beam Design – SNI 2847:2019</title>
+<link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
 <div class="container">
+    <h1>RC Beam Design Calculator</h1>
+    <h2>Mengacu SNI 2847:2019</h2>
 
-<h1>RC BEAM FULL DESIGN</h1>
-<div class="subtitle">Mengacu SNI 2847:2019</div>
+    <div class="card">
+        <h3>Input Data</h3>
 
-fc' (MPa)
-<input type="number" id="fc">
+        <label>fc' (MPa)</label>
+        <input type="number" id="fc" value="25">
 
-fy (MPa)
-<input type="number" id="fy">
+        <label>fy (MPa)</label>
+        <input type="number" id="fy" value="420">
 
-Lebar b (mm)
-<input type="number" id="b">
+        <label>Lebar Balok b (mm)</label>
+        <input type="number" id="b" value="300">
 
-Tinggi h (mm)
-<input type="number" id="h">
+        <label>Tinggi Balok h (mm)</label>
+        <input type="number" id="h" value="600">
 
-Cover (mm)
-<input type="number" id="cover">
+        <label>Selimut Beton (mm)</label>
+        <input type="number" id="cover" value="40">
 
-Diameter Sengkang (mm)
-<input type="number" id="ds">
+        <label>Diameter Tulangan Utama (mm)</label>
+        <input type="number" id="db" value="16">
 
-Diameter Tulangan Utama (mm)
-<input type="number" id="db">
+        <label>Diameter Sengkang (mm)</label>
+        <input type="number" id="ds" value="10">
 
-Mu Tumpuan (kNm)
-<input type="number" id="Mu_sup">
+        <label>Momen Terfaktor Mu (kNm)</label>
+        <input type="number" id="Mu" value="200">
 
-Mu Lapangan (kNm)
-<input type="number" id="Mu_mid">
+        <label>Geser Terfaktor Vu (kN)</label>
+        <input type="number" id="Vu" value="150">
 
-Vu (kN)
-<input type="number" id="Vu">
+        <button onclick="designBeam()">DESIGN</button>
+    </div>
 
-<button onclick="design()">DESIGN</button>
-
-<div class="result" id="output"></div>
-
+    <div class="card">
+        <h3>Hasil Desain</h3>
+        <div id="output"></div>
+    </div>
 </div>
 
-<script>
-
-function flexural(Mu, fc, fy, b, d){
-let phi=0.9;
-
-let A=phi*fy*fy/(2*0.85*fc*b);
-let B=-phi*fy*d;
-let C=Mu;
-
-let disc=B*B-4*A*C;
-let As=(-B-Math.sqrt(disc))/(2*A);
-
-let rho_min=Math.max(0.25*Math.sqrt(fc)/fy,1.4/fy);
-if(As/(b*d)<rho_min){
-As=rho_min*b*d;
-}
-
-let a=As*fy/(0.85*fc*b);
-let Mn=As*fy*(d-a/2);
-let phiMn=phi*Mn;
-
-return {As,phiMn};
-}
-
-function design(){
-
-let fc=parseFloat(fc.value);
-let fy=parseFloat(fy.value);
-let b=parseFloat(b.value);
-let h=parseFloat(h.value);
-let cover=parseFloat(cover.value);
-let ds=parseFloat(ds.value);
-let db=parseFloat(db.value);
-let Mu_sup=parseFloat(Mu_sup.value)*1e6;
-let Mu_mid=parseFloat(Mu_mid.value)*1e6;
-let Vu=parseFloat(Vu.value)*1e3;
-
-let d=h-cover-ds-db/2;
-
-let support=flexural(Mu_sup,fc,fy,b,d);
-let field=flexural(Mu_mid,fc,fy,b,d);
-
-let area_bar=Math.PI*db*db/4;
-
-let n_sup=Math.max(2,Math.ceil(support.As/area_bar));
-let n_mid=Math.max(2,Math.ceil(field.As/area_bar));
-
-// Clear spacing tulangan
-let spacing_sup=(b-2*cover-n_sup*db)/(n_sup-1);
-let spacing_mid=(b-2*cover-n_mid*db)/(n_mid-1);
-
-// Shear Design
-let phi_shear=0.75;
-let Vc=0.17*Math.sqrt(fc)*b*d;
-let phiVc=phi_shear*Vc;
-
-let Av=2*Math.PI*ds*ds/4;
-
-let s_sup=Math.min(d/4,100);
-let s_mid=Math.min(d/2,300);
-
-output.innerHTML=`
-
-<h3>HASIL DESAIN</h3>
-
-<b>Effective Depth</b><br>
-d = ${d.toFixed(1)} mm<br><br>
-
-<div class="section">
-<b>TUMPUAN (Momen Negatif)</b><br>
-Posisi : Tulangan ATAS<br>
-As = ${support.As.toFixed(1)} mm²<br>
-Jumlah = ${n_sup}D${db}<br>
-Clear Spacing ≈ ${spacing_sup.toFixed(1)} mm<br>
-Sengkang (Zona 2d) ≤ ${s_sup.toFixed(0)} mm<br>
-φMn = ${(support.phiMn/1e6).toFixed(2)} kNm<br>
-Status = ${support.phiMn>=Mu_sup?"AMAN":"TIDAK AMAN"}
-</div>
-
-<div class="section">
-<b>LAPANGAN (Momen Positif)</b><br>
-Posisi : Tulangan BAWAH<br>
-As = ${field.As.toFixed(1)} mm²<br>
-Jumlah = ${n_mid}D${db}<br>
-Clear Spacing ≈ ${spacing_mid.toFixed(1)} mm<br>
-Sengkang (Daerah Tengah) ≤ ${s_mid.toFixed(0)} mm<br>
-φMn = ${(field.phiMn/1e6).toFixed(2)} kNm<br>
-Status = ${field.phiMn>=Mu_mid?"AMAN":"TIDAK AMAN"}
-</div>
-
-`;
-}
-
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
