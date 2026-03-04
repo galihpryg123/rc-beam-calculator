@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RC Beam Full Design - SNI Based</title>
+<title>RC Beam Design - SNI 2847:2019</title>
 
 <style>
 body {
@@ -13,7 +13,7 @@ body {
 }
 
 .container {
-    max-width: 750px;
+    max-width: 800px;
     margin: auto;
     background: white;
     padding: 25px;
@@ -23,13 +23,21 @@ body {
 
 h1 {
     text-align: center;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: gray;
+    margin-bottom: 20px;
 }
 
 .input-group {
     margin-bottom: 12px;
 }
 
-.input-group label {
+label {
     font-weight: bold;
 }
 
@@ -65,7 +73,11 @@ button:hover {
 <body>
 
 <div class="container">
-<h1>RC Beam Full Design (SNI Based)</h1>
+
+<h1>RC BEAM FULL DESIGN</h1>
+<div class="subtitle">Perencanaan Lentur & Geser Mengacu SNI 2847:2019</div>
+
+<h3>DATA MATERIAL & DIMENSI</h3>
 
 <div class="input-group">
 <label>fc' (MPa)</label>
@@ -102,9 +114,16 @@ button:hover {
 <input type="number" id="db">
 </div>
 
+<h3>BEBAN FAKTOR</h3>
+
 <div class="input-group">
-<label>Mu (kNm)</label>
-<input type="number" id="Mu">
+<label>Mu Tumpuan (kNm)</label>
+<input type="number" id="Mu_tumpuan">
+</div>
+
+<div class="input-group">
+<label>Mu Lapangan (kNm)</label>
+<input type="number" id="Mu_lapangan">
 </div>
 
 <div class="input-group">
@@ -119,24 +138,12 @@ button:hover {
 </div>
 
 <script>
-function design(){
 
-let fc = parseFloat(document.getElementById("fc").value);
-let fy = parseFloat(document.getElementById("fy").value);
-let b = parseFloat(document.getElementById("b").value);
-let h = parseFloat(document.getElementById("h").value);
-let cover = parseFloat(document.getElementById("cover").value);
-let ds = parseFloat(document.getElementById("ds").value);
-let db = parseFloat(document.getElementById("db").value);
-let Mu = parseFloat(document.getElementById("Mu").value) * 1e6;
-let Vu = parseFloat(document.getElementById("Vu").value) * 1e3;
+function flexuralDesign(Mu, fc, fy, b, d){
 
-let phi_flexure = 0.9;
-let phi_shear = 0.75;
+let phi = 0.9;
 let Es = 200000;
 let epsilon_cu = 0.003;
-
-let d = h - cover - ds - db/2;
 
 // beta1
 let beta1;
@@ -144,16 +151,13 @@ if(fc <= 28) beta1 = 0.85;
 else if(fc >= 55) beta1 = 0.65;
 else beta1 = 0.85 - 0.05*((fc-28)/7);
 
-// Quadratic Flexural Design
-let A = phi_flexure * fy * fy / (2 * 0.85 * fc * b);
-let B = -phi_flexure * fy * d;
+// Quadratic
+let A = phi * fy * fy / (2 * 0.85 * fc * b);
+let B = -phi * fy * d;
 let C = Mu;
 
 let disc = B*B - 4*A*C;
-if(disc < 0){
-    document.getElementById("output").innerHTML = "Tidak ada solusi.";
-    return;
-}
+if(disc < 0) return null;
 
 let As = (-B - Math.sqrt(disc)) / (2*A);
 let rho = As/(b*d);
@@ -170,12 +174,37 @@ if(rho < rho_min){
 
 let a = As*fy/(0.85*fc*b);
 let Mn = As*fy*(d - a/2);
-let phiMn = phi_flexure*Mn;
+let phiMn = phi*Mn;
+
+return {As, rho, rho_min, rho_max, phiMn};
+}
+
+function design(){
+
+let fc = parseFloat(document.getElementById("fc").value);
+let fy = parseFloat(document.getElementById("fy").value);
+let b = parseFloat(document.getElementById("b").value);
+let h = parseFloat(document.getElementById("h").value);
+let cover = parseFloat(document.getElementById("cover").value);
+let ds = parseFloat(document.getElementById("ds").value);
+let db = parseFloat(document.getElementById("db").value);
+
+let Mu_tumpuan = parseFloat(document.getElementById("Mu_tumpuan").value)*1e6;
+let Mu_lapangan = parseFloat(document.getElementById("Mu_lapangan").value)*1e6;
+let Vu = parseFloat(document.getElementById("Vu").value)*1e3;
+
+let d = h - cover - ds - db/2;
+
+let support = flexuralDesign(Mu_tumpuan, fc, fy, b, d);
+let field = flexuralDesign(Mu_lapangan, fc, fy, b, d);
 
 let area_bar = Math.PI*db*db/4;
-let n_bar = Math.ceil(As/area_bar);
+
+let n_support = Math.ceil(support.As/area_bar);
+let n_field = Math.ceil(field.As/area_bar);
 
 // Shear
+let phi_shear = 0.75;
 let Vc = 0.17*Math.sqrt(fc)*b*d;
 let phiVc = phi_shear*Vc;
 
@@ -190,18 +219,25 @@ if(Vu > phiVc){
 
 document.getElementById("output").innerHTML = `
 <h3>HASIL DESAIN</h3>
-d = ${d.toFixed(2)} mm <br>
-As = ${As.toFixed(2)} mm² <br>
-ρ = ${rho.toFixed(4)} <br>
-ρmin = ${rho_min.toFixed(4)} <br>
-ρmax = ${rho_max.toFixed(4)} <br>
-Tulangan = ${n_bar}D${db} <br>
-φMn = ${(phiMn/1e6).toFixed(2)} kNm <br>
-Mu = ${(Mu/1e6).toFixed(2)} kNm <br>
-Status = ${phiMn >= Mu ? "AMAN" : "TIDAK AMAN"} <br>
-Spacing Sengkang ≈ ${spacing.toFixed(1)} mm
+
+<b>EFEKTIF DEPTH</b><br>
+d = ${d.toFixed(2)} mm<br><br>
+
+<b>TULANGAN TUMPUAN (Momen Negatif)</b><br>
+As = ${support.As.toFixed(2)} mm²<br>
+Tulangan = ${n_support}D${db}<br>
+φMn = ${(support.phiMn/1e6).toFixed(2)} kNm<br><br>
+
+<b>TULANGAN LAPANGAN (Momen Positif)</b><br>
+As = ${field.As.toFixed(2)} mm²<br>
+Tulangan = ${n_field}D${db}<br>
+φMn = ${(field.phiMn/1e6).toFixed(2)} kNm<br><br>
+
+<b>DESAIN GESER</b><br>
+Spacing Sengkang ≈ ${spacing.toFixed(1)} mm<br>
 `;
 }
+
 </script>
 
 </body>
