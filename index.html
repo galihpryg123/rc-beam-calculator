@@ -1,20 +1,18 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RC Beam Design - SNI 2847:2019</title>
 
 <style>
-body { font-family: Arial; background:#f3f4f6; padding:30px; }
-.container { max-width:850px; margin:auto; background:white; padding:25px; border-radius:10px; box-shadow:0 5px 20px rgba(0,0,0,0.1);}
-h1 { text-align:center; }
-.subtitle { text-align:center; color:gray; margin-bottom:20px; }
-input { width:100%; padding:6px; margin-bottom:10px; }
-button { width:100%; padding:12px; background:#1e40af; color:white; border:none; cursor:pointer; }
-button:hover { background:#1d4ed8; }
-.result { margin-top:20px; background:#eef2ff; padding:15px; border-radius:8px; }
-.section { margin-top:15px; padding:10px; background:#ffffff; border-left:5px solid #1e40af; }
+body{font-family:Arial;background:#f4f6f9;padding:30px;}
+.container{max-width:900px;margin:auto;background:white;padding:25px;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,0.1);}
+h1{text-align:center;}
+.subtitle{text-align:center;color:gray;margin-bottom:20px;}
+input{width:100%;padding:6px;margin-bottom:10px;}
+button{width:100%;padding:12px;background:#1e40af;color:white;border:none;}
+.result{margin-top:20px;background:#eef2ff;padding:15px;border-radius:8px;}
+.section{margin-top:15px;padding:10px;background:white;border-left:6px solid #1e40af;}
 </style>
 </head>
 
@@ -23,9 +21,7 @@ button:hover { background:#1d4ed8; }
 <div class="container">
 
 <h1>RC BEAM FULL DESIGN</h1>
-<div class="subtitle">Perencanaan Lentur & Geser Mengacu SNI 2847:2019</div>
-
-<h3>DATA MATERIAL & DIMENSI</h3>
+<div class="subtitle">Mengacu SNI 2847:2019</div>
 
 fc' (MPa)
 <input type="number" id="fc">
@@ -33,10 +29,10 @@ fc' (MPa)
 fy (MPa)
 <input type="number" id="fy">
 
-Lebar Balok b (mm)
+Lebar b (mm)
 <input type="number" id="b">
 
-Tinggi Balok h (mm)
+Tinggi h (mm)
 <input type="number" id="h">
 
 Cover (mm)
@@ -48,13 +44,11 @@ Diameter Sengkang (mm)
 Diameter Tulangan Utama (mm)
 <input type="number" id="db">
 
-<h3>BEBAN FAKTOR</h3>
+Mu Tumpuan (kNm)
+<input type="number" id="Mu_sup">
 
-Mu Tumpuan / Negatif (kNm)
-<input type="number" id="Mu_tumpuan">
-
-Mu Lapangan / Positif (kNm)
-<input type="number" id="Mu_lapangan">
+Mu Lapangan (kNm)
+<input type="number" id="Mu_mid">
 
 Vu (kN)
 <input type="number" id="Vu">
@@ -68,105 +62,93 @@ Vu (kN)
 <script>
 
 function flexural(Mu, fc, fy, b, d){
+let phi=0.9;
 
-let phi = 0.9;
-let Es = 200000;
-let epsilon_cu = 0.003;
+let A=phi*fy*fy/(2*0.85*fc*b);
+let B=-phi*fy*d;
+let C=Mu;
 
-let beta1;
-if(fc <= 28) beta1 = 0.85;
-else if(fc >= 55) beta1 = 0.65;
-else beta1 = 0.85 - 0.05*((fc-28)/7);
+let disc=B*B-4*A*C;
+let As=(-B-Math.sqrt(disc))/(2*A);
 
-let A = phi * fy * fy / (2 * 0.85 * fc * b);
-let B = -phi * fy * d;
-let C = Mu;
-
-let disc = B*B - 4*A*C;
-if(disc < 0) return null;
-
-let As = (-B - Math.sqrt(disc)) / (2*A);
-let rho = As/(b*d);
-
-let rho_min = Math.max(0.25*Math.sqrt(fc)/fy, 1.4/fy);
-
-if(rho < rho_min){
-    As = rho_min*b*d;
+let rho_min=Math.max(0.25*Math.sqrt(fc)/fy,1.4/fy);
+if(As/(b*d)<rho_min){
+As=rho_min*b*d;
 }
 
-let a = As*fy/(0.85*fc*b);
-let Mn = As*fy*(d - a/2);
-let phiMn = phi*Mn;
+let a=As*fy/(0.85*fc*b);
+let Mn=As*fy*(d-a/2);
+let phiMn=phi*Mn;
 
-return {As, phiMn};
+return {As,phiMn};
 }
 
 function design(){
 
-let fc = parseFloat(document.getElementById("fc").value);
-let fy = parseFloat(document.getElementById("fy").value);
-let b = parseFloat(document.getElementById("b").value);
-let h = parseFloat(document.getElementById("h").value);
-let cover = parseFloat(document.getElementById("cover").value);
-let ds = parseFloat(document.getElementById("ds").value);
-let db = parseFloat(document.getElementById("db").value);
+let fc=parseFloat(fc.value);
+let fy=parseFloat(fy.value);
+let b=parseFloat(b.value);
+let h=parseFloat(h.value);
+let cover=parseFloat(cover.value);
+let ds=parseFloat(ds.value);
+let db=parseFloat(db.value);
+let Mu_sup=parseFloat(Mu_sup.value)*1e6;
+let Mu_mid=parseFloat(Mu_mid.value)*1e6;
+let Vu=parseFloat(Vu.value)*1e3;
 
-let Mu_sup = parseFloat(document.getElementById("Mu_tumpuan").value)*1e6;
-let Mu_mid = parseFloat(document.getElementById("Mu_lapangan").value)*1e6;
-let Vu = parseFloat(document.getElementById("Vu").value)*1e3;
+let d=h-cover-ds-db/2;
 
-let d = h - cover - ds - db/2;
+let support=flexural(Mu_sup,fc,fy,b,d);
+let field=flexural(Mu_mid,fc,fy,b,d);
 
-let support = flexural(Mu_sup, fc, fy, b, d);
-let field = flexural(Mu_mid, fc, fy, b, d);
+let area_bar=Math.PI*db*db/4;
 
-let area_bar = Math.PI*db*db/4;
+let n_sup=Math.max(2,Math.ceil(support.As/area_bar));
+let n_mid=Math.max(2,Math.ceil(field.As/area_bar));
 
-let n_sup = Math.ceil(support.As/area_bar);
-let n_mid = Math.ceil(field.As/area_bar);
+// Clear spacing tulangan
+let spacing_sup=(b-2*cover-n_sup*db)/(n_sup-1);
+let spacing_mid=(b-2*cover-n_mid*db)/(n_mid-1);
 
-// Shear
-let phi_shear = 0.75;
-let Vc = 0.17*Math.sqrt(fc)*b*d;
-let phiVc = phi_shear*Vc;
+// Shear Design
+let phi_shear=0.75;
+let Vc=0.17*Math.sqrt(fc)*b*d;
+let phiVc=phi_shear*Vc;
 
-let spacing;
-if(Vu > phiVc){
-    let Vs_req = (Vu/phi_shear) - Vc;
-    let Av = 2*Math.PI*ds*ds/4;
-    spacing = (Av*fy*d)/Vs_req;
-}else{
-    spacing = 300;
-}
+let Av=2*Math.PI*ds*ds/4;
 
-document.getElementById("output").innerHTML = `
+let s_sup=Math.min(d/4,100);
+let s_mid=Math.min(d/2,300);
+
+output.innerHTML=`
+
 <h3>HASIL DESAIN</h3>
 
 <b>Effective Depth</b><br>
-d = ${d.toFixed(2)} mm<br><br>
+d = ${d.toFixed(1)} mm<br><br>
 
 <div class="section">
-<b>DAERAH TUMPUAN (Momen Negatif)</b><br>
-Posisi Tulangan : ATAS BALOK<br>
-As = ${support.As.toFixed(2)} mm²<br>
-Rekomendasi = ${n_sup}D${db} (Tulangan Atas)<br>
+<b>TUMPUAN (Momen Negatif)</b><br>
+Posisi : Tulangan ATAS<br>
+As = ${support.As.toFixed(1)} mm²<br>
+Jumlah = ${n_sup}D${db}<br>
+Clear Spacing ≈ ${spacing_sup.toFixed(1)} mm<br>
+Sengkang (Zona 2d) ≤ ${s_sup.toFixed(0)} mm<br>
 φMn = ${(support.phiMn/1e6).toFixed(2)} kNm<br>
-Status = ${support.phiMn >= Mu_sup ? "AMAN" : "TIDAK AMAN"}
+Status = ${support.phiMn>=Mu_sup?"AMAN":"TIDAK AMAN"}
 </div>
 
 <div class="section">
-<b>DAERAH LAPANGAN (Momen Positif)</b><br>
-Posisi Tulangan : BAWAH BALOK<br>
-As = ${field.As.toFixed(2)} mm²<br>
-Rekomendasi = ${n_mid}D${db} (Tulangan Bawah)<br>
+<b>LAPANGAN (Momen Positif)</b><br>
+Posisi : Tulangan BAWAH<br>
+As = ${field.As.toFixed(1)} mm²<br>
+Jumlah = ${n_mid}D${db}<br>
+Clear Spacing ≈ ${spacing_mid.toFixed(1)} mm<br>
+Sengkang (Daerah Tengah) ≤ ${s_mid.toFixed(0)} mm<br>
 φMn = ${(field.phiMn/1e6).toFixed(2)} kNm<br>
-Status = ${field.phiMn >= Mu_mid ? "AMAN" : "TIDAK AMAN"}
+Status = ${field.phiMn>=Mu_mid?"AMAN":"TIDAK AMAN"}
 </div>
 
-<div class="section">
-<b>DESAIN GESER</b><br>
-Spacing Sengkang ≈ ${spacing.toFixed(1)} mm
-</div>
 `;
 }
 
