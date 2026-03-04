@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RC Beam Calculator - SNI 2847</title>
+
+<link rel="stylesheet" href="css/style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+
+<div class="container">
+<h1>RC Beam Calculator</h1>
+<p class="subtitle">Perhitungan Balok Beton Bertulang – SNI 2847</p>
+
+<input type="file" id="uploadExcel" accept=".xlsx">
+
+<div class="grid">
+<input type="number" id="fc" placeholder="fc' (MPa)">
+<input type="number" id="fy" placeholder="fy (MPa)">
+<input type="number" id="b" placeholder="Lebar b (mm)">
+<input type="number" id="h" placeholder="Tinggi h (mm)">
+<input type="number" id="cover" placeholder="Selimut (mm)">
+<input type="number" id="diaTul" placeholder="Diameter Tulangan (mm)">
+<input type="number" id="jumlahTul" placeholder="Jumlah Tulangan">
+<input type="number" id="diaSengkang" placeholder="Diameter Sengkang (mm)">
+<input type="number" id="spasiSengkang" placeholder="Spasi Sengkang (mm)">
+<input type="number" id="Mu" placeholder="Mu (kNm)">
+<input type="number" id="Vu" placeholder="Vu (kN)">
+</div>
+
+<div class="btn-group">
+<button onclick="hitung()">Hitung</button>
+<button onclick="exportPDF()">Export PDF</button>
+</div>
+
+<div id="hasil"></div>
+
+</div>
+
+<script src="js/script.js"></script>
+</body>
+</html>
