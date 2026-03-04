@@ -3,46 +3,206 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RC Beam Calculator - SNI 2847</title>
+<title>RC Beam Full Design - SNI Based</title>
 
-<link rel="stylesheet" href="css/style.css">
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f3f4f6;
+    padding: 30px;
+}
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+.container {
+    max-width: 750px;
+    margin: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+h1 {
+    text-align: center;
+}
+
+.input-group {
+    margin-bottom: 12px;
+}
+
+.input-group label {
+    font-weight: bold;
+}
+
+input {
+    width: 100%;
+    padding: 7px;
+    margin-top: 4px;
+}
+
+button {
+    margin-top: 15px;
+    width: 100%;
+    padding: 12px;
+    background: #1e40af;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+.result {
+    margin-top: 20px;
+    background: #eef2ff;
+    padding: 15px;
+    border-radius: 8px;
+}
+</style>
 </head>
 
 <body>
 
 <div class="container">
-<h1>RC Beam Calculator</h1>
-<p class="subtitle">Perhitungan Balok Beton Bertulang – SNI 2847</p>
+<h1>RC Beam Full Design (SNI Based)</h1>
 
-<input type="file" id="uploadExcel" accept=".xlsx">
-
-<div class="grid">
-<input type="number" id="fc" placeholder="fc' (MPa)">
-<input type="number" id="fy" placeholder="fy (MPa)">
-<input type="number" id="b" placeholder="Lebar b (mm)">
-<input type="number" id="h" placeholder="Tinggi h (mm)">
-<input type="number" id="cover" placeholder="Selimut (mm)">
-<input type="number" id="diaTul" placeholder="Diameter Tulangan (mm)">
-<input type="number" id="jumlahTul" placeholder="Jumlah Tulangan">
-<input type="number" id="diaSengkang" placeholder="Diameter Sengkang (mm)">
-<input type="number" id="spasiSengkang" placeholder="Spasi Sengkang (mm)">
-<input type="number" id="Mu" placeholder="Mu (kNm)">
-<input type="number" id="Vu" placeholder="Vu (kN)">
+<div class="input-group">
+<label>fc' (MPa)</label>
+<input type="number" id="fc">
 </div>
 
-<div class="btn-group">
-<button onclick="hitung()">Hitung</button>
-<button onclick="exportPDF()">Export PDF</button>
+<div class="input-group">
+<label>fy (MPa)</label>
+<input type="number" id="fy">
 </div>
 
-<div id="hasil"></div>
+<div class="input-group">
+<label>Lebar Balok b (mm)</label>
+<input type="number" id="b">
+</div>
+
+<div class="input-group">
+<label>Tinggi Balok h (mm)</label>
+<input type="number" id="h">
+</div>
+
+<div class="input-group">
+<label>Cover (mm)</label>
+<input type="number" id="cover">
+</div>
+
+<div class="input-group">
+<label>Diameter Sengkang (mm)</label>
+<input type="number" id="ds">
+</div>
+
+<div class="input-group">
+<label>Diameter Tulangan Utama (mm)</label>
+<input type="number" id="db">
+</div>
+
+<div class="input-group">
+<label>Mu (kNm)</label>
+<input type="number" id="Mu">
+</div>
+
+<div class="input-group">
+<label>Vu (kN)</label>
+<input type="number" id="Vu">
+</div>
+
+<button onclick="design()">DESIGN</button>
+
+<div class="result" id="output"></div>
 
 </div>
 
-<script src="js/script.js"></script>
+<script>
+function design(){
+
+let fc = parseFloat(document.getElementById("fc").value);
+let fy = parseFloat(document.getElementById("fy").value);
+let b = parseFloat(document.getElementById("b").value);
+let h = parseFloat(document.getElementById("h").value);
+let cover = parseFloat(document.getElementById("cover").value);
+let ds = parseFloat(document.getElementById("ds").value);
+let db = parseFloat(document.getElementById("db").value);
+let Mu = parseFloat(document.getElementById("Mu").value) * 1e6;
+let Vu = parseFloat(document.getElementById("Vu").value) * 1e3;
+
+let phi_flexure = 0.9;
+let phi_shear = 0.75;
+let Es = 200000;
+let epsilon_cu = 0.003;
+
+let d = h - cover - ds - db/2;
+
+// beta1
+let beta1;
+if(fc <= 28) beta1 = 0.85;
+else if(fc >= 55) beta1 = 0.65;
+else beta1 = 0.85 - 0.05*((fc-28)/7);
+
+// Quadratic Flexural Design
+let A = phi_flexure * fy * fy / (2 * 0.85 * fc * b);
+let B = -phi_flexure * fy * d;
+let C = Mu;
+
+let disc = B*B - 4*A*C;
+if(disc < 0){
+    document.getElementById("output").innerHTML = "Tidak ada solusi.";
+    return;
+}
+
+let As = (-B - Math.sqrt(disc)) / (2*A);
+let rho = As/(b*d);
+
+let rho_min = Math.max(0.25*Math.sqrt(fc)/fy, 1.4/fy);
+let epsilon_y = fy/Es;
+let rho_bal = (0.85*fc*beta1/fy)*(epsilon_cu/(epsilon_cu+epsilon_y));
+let rho_max = 0.75*rho_bal;
+
+if(rho < rho_min){
+    As = rho_min*b*d;
+    rho = rho_min;
+}
+
+let a = As*fy/(0.85*fc*b);
+let Mn = As*fy*(d - a/2);
+let phiMn = phi_flexure*Mn;
+
+let area_bar = Math.PI*db*db/4;
+let n_bar = Math.ceil(As/area_bar);
+
+// Shear
+let Vc = 0.17*Math.sqrt(fc)*b*d;
+let phiVc = phi_shear*Vc;
+
+let spacing;
+if(Vu > phiVc){
+    let Vs_req = (Vu/phi_shear) - Vc;
+    let Av = 2*Math.PI*ds*ds/4;
+    spacing = (Av*fy*d)/Vs_req;
+}else{
+    spacing = 300;
+}
+
+document.getElementById("output").innerHTML = `
+<h3>HASIL DESAIN</h3>
+d = ${d.toFixed(2)} mm <br>
+As = ${As.toFixed(2)} mm² <br>
+ρ = ${rho.toFixed(4)} <br>
+ρmin = ${rho_min.toFixed(4)} <br>
+ρmax = ${rho_max.toFixed(4)} <br>
+Tulangan = ${n_bar}D${db} <br>
+φMn = ${(phiMn/1e6).toFixed(2)} kNm <br>
+Mu = ${(Mu/1e6).toFixed(2)} kNm <br>
+Status = ${phiMn >= Mu ? "AMAN" : "TIDAK AMAN"} <br>
+Spacing Sengkang ≈ ${spacing.toFixed(1)} mm
+`;
+}
+</script>
+
 </body>
-
 </html>
