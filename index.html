@@ -6,67 +6,15 @@
 <title>RC Beam Design - SNI 2847:2019</title>
 
 <style>
-body {
-    font-family: Arial, sans-serif;
-    background: #f3f4f6;
-    padding: 30px;
-}
-
-.container {
-    max-width: 800px;
-    margin: auto;
-    background: white;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-}
-
-h1 {
-    text-align: center;
-    margin-bottom: 5px;
-}
-
-.subtitle {
-    text-align: center;
-    font-size: 14px;
-    color: gray;
-    margin-bottom: 20px;
-}
-
-.input-group {
-    margin-bottom: 12px;
-}
-
-label {
-    font-weight: bold;
-}
-
-input {
-    width: 100%;
-    padding: 7px;
-    margin-top: 4px;
-}
-
-button {
-    margin-top: 15px;
-    width: 100%;
-    padding: 12px;
-    background: #1e40af;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #1d4ed8;
-}
-
-.result {
-    margin-top: 20px;
-    background: #eef2ff;
-    padding: 15px;
-    border-radius: 8px;
-}
+body { font-family: Arial; background:#f3f4f6; padding:30px; }
+.container { max-width:850px; margin:auto; background:white; padding:25px; border-radius:10px; box-shadow:0 5px 20px rgba(0,0,0,0.1);}
+h1 { text-align:center; }
+.subtitle { text-align:center; color:gray; margin-bottom:20px; }
+input { width:100%; padding:6px; margin-bottom:10px; }
+button { width:100%; padding:12px; background:#1e40af; color:white; border:none; cursor:pointer; }
+button:hover { background:#1d4ed8; }
+.result { margin-top:20px; background:#eef2ff; padding:15px; border-radius:8px; }
+.section { margin-top:15px; padding:10px; background:#ffffff; border-left:5px solid #1e40af; }
 </style>
 </head>
 
@@ -79,57 +27,37 @@ button:hover {
 
 <h3>DATA MATERIAL & DIMENSI</h3>
 
-<div class="input-group">
-<label>fc' (MPa)</label>
+fc' (MPa)
 <input type="number" id="fc">
-</div>
 
-<div class="input-group">
-<label>fy (MPa)</label>
+fy (MPa)
 <input type="number" id="fy">
-</div>
 
-<div class="input-group">
-<label>Lebar Balok b (mm)</label>
+Lebar Balok b (mm)
 <input type="number" id="b">
-</div>
 
-<div class="input-group">
-<label>Tinggi Balok h (mm)</label>
+Tinggi Balok h (mm)
 <input type="number" id="h">
-</div>
 
-<div class="input-group">
-<label>Cover (mm)</label>
+Cover (mm)
 <input type="number" id="cover">
-</div>
 
-<div class="input-group">
-<label>Diameter Sengkang (mm)</label>
+Diameter Sengkang (mm)
 <input type="number" id="ds">
-</div>
 
-<div class="input-group">
-<label>Diameter Tulangan Utama (mm)</label>
+Diameter Tulangan Utama (mm)
 <input type="number" id="db">
-</div>
 
 <h3>BEBAN FAKTOR</h3>
 
-<div class="input-group">
-<label>Mu Tumpuan (kNm)</label>
+Mu Tumpuan / Negatif (kNm)
 <input type="number" id="Mu_tumpuan">
-</div>
 
-<div class="input-group">
-<label>Mu Lapangan (kNm)</label>
+Mu Lapangan / Positif (kNm)
 <input type="number" id="Mu_lapangan">
-</div>
 
-<div class="input-group">
-<label>Vu (kN)</label>
+Vu (kN)
 <input type="number" id="Vu">
-</div>
 
 <button onclick="design()">DESIGN</button>
 
@@ -139,19 +67,17 @@ button:hover {
 
 <script>
 
-function flexuralDesign(Mu, fc, fy, b, d){
+function flexural(Mu, fc, fy, b, d){
 
 let phi = 0.9;
 let Es = 200000;
 let epsilon_cu = 0.003;
 
-// beta1
 let beta1;
 if(fc <= 28) beta1 = 0.85;
 else if(fc >= 55) beta1 = 0.65;
 else beta1 = 0.85 - 0.05*((fc-28)/7);
 
-// Quadratic
 let A = phi * fy * fy / (2 * 0.85 * fc * b);
 let B = -phi * fy * d;
 let C = Mu;
@@ -163,20 +89,16 @@ let As = (-B - Math.sqrt(disc)) / (2*A);
 let rho = As/(b*d);
 
 let rho_min = Math.max(0.25*Math.sqrt(fc)/fy, 1.4/fy);
-let epsilon_y = fy/Es;
-let rho_bal = (0.85*fc*beta1/fy)*(epsilon_cu/(epsilon_cu+epsilon_y));
-let rho_max = 0.75*rho_bal;
 
 if(rho < rho_min){
     As = rho_min*b*d;
-    rho = rho_min;
 }
 
 let a = As*fy/(0.85*fc*b);
 let Mn = As*fy*(d - a/2);
 let phiMn = phi*Mn;
 
-return {As, rho, rho_min, rho_max, phiMn};
+return {As, phiMn};
 }
 
 function design(){
@@ -189,19 +111,19 @@ let cover = parseFloat(document.getElementById("cover").value);
 let ds = parseFloat(document.getElementById("ds").value);
 let db = parseFloat(document.getElementById("db").value);
 
-let Mu_tumpuan = parseFloat(document.getElementById("Mu_tumpuan").value)*1e6;
-let Mu_lapangan = parseFloat(document.getElementById("Mu_lapangan").value)*1e6;
+let Mu_sup = parseFloat(document.getElementById("Mu_tumpuan").value)*1e6;
+let Mu_mid = parseFloat(document.getElementById("Mu_lapangan").value)*1e6;
 let Vu = parseFloat(document.getElementById("Vu").value)*1e3;
 
 let d = h - cover - ds - db/2;
 
-let support = flexuralDesign(Mu_tumpuan, fc, fy, b, d);
-let field = flexuralDesign(Mu_lapangan, fc, fy, b, d);
+let support = flexural(Mu_sup, fc, fy, b, d);
+let field = flexural(Mu_mid, fc, fy, b, d);
 
 let area_bar = Math.PI*db*db/4;
 
-let n_support = Math.ceil(support.As/area_bar);
-let n_field = Math.ceil(field.As/area_bar);
+let n_sup = Math.ceil(support.As/area_bar);
+let n_mid = Math.ceil(field.As/area_bar);
 
 // Shear
 let phi_shear = 0.75;
@@ -220,21 +142,31 @@ if(Vu > phiVc){
 document.getElementById("output").innerHTML = `
 <h3>HASIL DESAIN</h3>
 
-<b>EFEKTIF DEPTH</b><br>
+<b>Effective Depth</b><br>
 d = ${d.toFixed(2)} mm<br><br>
 
-<b>TULANGAN TUMPUAN (Momen Negatif)</b><br>
+<div class="section">
+<b>DAERAH TUMPUAN (Momen Negatif)</b><br>
+Posisi Tulangan : ATAS BALOK<br>
 As = ${support.As.toFixed(2)} mm²<br>
-Tulangan = ${n_support}D${db}<br>
-φMn = ${(support.phiMn/1e6).toFixed(2)} kNm<br><br>
+Rekomendasi = ${n_sup}D${db} (Tulangan Atas)<br>
+φMn = ${(support.phiMn/1e6).toFixed(2)} kNm<br>
+Status = ${support.phiMn >= Mu_sup ? "AMAN" : "TIDAK AMAN"}
+</div>
 
-<b>TULANGAN LAPANGAN (Momen Positif)</b><br>
+<div class="section">
+<b>DAERAH LAPANGAN (Momen Positif)</b><br>
+Posisi Tulangan : BAWAH BALOK<br>
 As = ${field.As.toFixed(2)} mm²<br>
-Tulangan = ${n_field}D${db}<br>
-φMn = ${(field.phiMn/1e6).toFixed(2)} kNm<br><br>
+Rekomendasi = ${n_mid}D${db} (Tulangan Bawah)<br>
+φMn = ${(field.phiMn/1e6).toFixed(2)} kNm<br>
+Status = ${field.phiMn >= Mu_mid ? "AMAN" : "TIDAK AMAN"}
+</div>
 
+<div class="section">
 <b>DESAIN GESER</b><br>
-Spacing Sengkang ≈ ${spacing.toFixed(1)} mm<br>
+Spacing Sengkang ≈ ${spacing.toFixed(1)} mm
+</div>
 `;
 }
 
