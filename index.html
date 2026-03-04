@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RC Beam Design - SNI 2847:2019</title>
+<title>RC Beam Design – SNI 2847:2019</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,28 +15,78 @@
 
 <div class="container">
 
-    <div class="card">
-        <h2>Input Data</h2>
+<form id="beamForm">
 
-        <div class="grid">
-            <input type="number" id="fc" placeholder="fc' (MPa)" value="25">
-            <input type="number" id="fy" placeholder="fy (MPa)" value="420">
-            <input type="number" id="b" placeholder="Lebar b (mm)" value="300">
-            <input type="number" id="h" placeholder="Tinggi h (mm)" value="600">
-            <input type="number" id="cover" placeholder="Selimut (mm)" value="40">
-            <input type="number" id="db" placeholder="Ø Tulangan (mm)" value="16">
-            <input type="number" id="ds" placeholder="Ø Sengkang (mm)" value="10">
-            <input type="number" id="Mu" placeholder="Mu (kNm)" value="200">
-            <input type="number" id="Vu" placeholder="Vu (kN)" value="150">
-        </div>
+<div class="card">
+<h2>Input Data</h2>
 
-        <button type="button" onclick="designBeam()">DESIGN BEAM</button>
-    </div>
+<div class="grid">
 
-    <div class="card">
-        <h2>Hasil Perhitungan</h2>
-        <div id="output">Klik DESIGN BEAM untuk menghitung.</div>
-    </div>
+<div class="input-group">
+<label>fc'</label>
+<input type="number" id="fc" value="25">
+<span>MPa</span>
+</div>
+
+<div class="input-group">
+<label>fy</label>
+<input type="number" id="fy" value="420">
+<span>MPa</span>
+</div>
+
+<div class="input-group">
+<label>Lebar b</label>
+<input type="number" id="b" value="300">
+<span>mm</span>
+</div>
+
+<div class="input-group">
+<label>Tinggi h</label>
+<input type="number" id="h" value="600">
+<span>mm</span>
+</div>
+
+<div class="input-group">
+<label>Selimut</label>
+<input type="number" id="cover" value="40">
+<span>mm</span>
+</div>
+
+<div class="input-group">
+<label>Ø Tulangan</label>
+<input type="number" id="db" value="16">
+<span>mm</span>
+</div>
+
+<div class="input-group">
+<label>Ø Sengkang</label>
+<input type="number" id="ds" value="10">
+<span>mm</span>
+</div>
+
+<div class="input-group">
+<label>Mu</label>
+<input type="number" id="Mu" value="200">
+<span>kNm</span>
+</div>
+
+<div class="input-group">
+<label>Vu</label>
+<input type="number" id="Vu" value="150">
+<span>kN</span>
+</div>
+
+</div>
+
+<button type="submit">DESIGN BEAM</button>
+
+</div>
+</form>
+
+<div class="card">
+<h2>Hasil Perhitungan</h2>
+<div id="output">Klik DESIGN BEAM untuk menghitung.</div>
+</div>
 
 </div>
 
